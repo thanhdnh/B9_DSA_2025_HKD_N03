@@ -1,9 +1,11 @@
 ﻿public class Vertex{
     public bool wasVisited;
     public string label;
-    public Vertex(string label){
+    public object data;
+    public Vertex(string label, object data){
         this.label = label;
         wasVisited = false;
+        this.data = data;
     }
 }
 public class Graph{
@@ -18,16 +20,48 @@ public class Graph{
             for (int k = 0; k < NUM_VERTICES; k++)
                 adjMatrix[j, k] = 0;
     }
-    public void AddVertex(string label){
-        vertices[numVerts] = new Vertex(label);
+    public void AddVertex(string label, object data){
+        vertices[numVerts] = new Vertex(label, data);
         numVerts++;
     }
     public void AddEdge(int start, int eend){
         adjMatrix[start, eend] = 1;
         adjMatrix[eend, start] = 1;
     }
+    private int SeqSearch(string label){
+        for(int i=0; i<vertices.Length; i++)
+            if(vertices[i].label == label)
+                return i;
+        return -1;
+    }
+    public void AddEdge(string lstart, string lend){
+        int start = SeqSearch(lstart);
+        int end = SeqSearch(lend);
+        AddEdge(start, end);
+    }
     public void ShowVertex(int v){
         Console.Write(vertices[v].label + " ");
+    }
+    public Vertex FindMin(){
+        Vertex min = vertices[0];
+        vertices[0].wasVisited = true;
+        Stack<int> gStack = new Stack<int>();
+        gStack.Push(0); int v;
+        while (gStack.Count > 0){
+            v = GetAdjUnvisitedVertex(gStack.Peek());
+            if (v == -1)
+                gStack.Pop();
+            else{
+                vertices[v].wasVisited = true;
+                if((int)(min.data)>(int)(vertices[v].data)){
+                    min = vertices[v];
+                }
+                gStack.Push(v);
+            }
+        }
+        for (int j = 0; j <= NUM_VERTICES - 1; j++)
+            vertices[j].wasVisited = false;
+        return min;
     }
     private int GetAdjUnvisitedVertex(int v){
         for (int j = 0; j <= NUM_VERTICES - 1; j++)
@@ -86,15 +120,17 @@ public class Program{
         Console.Clear();
 
         Graph graph = new Graph(13);
-        graph.AddVertex("A"); graph.AddVertex("B");//0 1
-        graph.AddVertex("C"); graph.AddVertex("D");//2 3
-        graph.AddVertex("E"); graph.AddVertex("F");//4 5
-        graph.AddVertex("G"); graph.AddVertex("H");//6 7
-        graph.AddVertex("I"); graph.AddVertex("J");//8 9
-        graph.AddVertex("K"); graph.AddVertex("L");//10  11
-        graph.AddVertex("M");//12
-        graph.AddEdge(0, 1);
-        graph.AddEdge(0, 4);
+        graph.AddVertex("A", 5); graph.AddVertex("B", 5);//0 1
+        graph.AddVertex("C", 7); graph.AddVertex("D", 11);//2 3
+        graph.AddVertex("E", 9); graph.AddVertex("F", 10);//4 5
+        graph.AddVertex("G", 2); graph.AddVertex("H", 5);//6 7
+        graph.AddVertex("I", 4); graph.AddVertex("J", 9);//8 9
+        graph.AddVertex("K", 1); graph.AddVertex("L", 22);//10  11
+        graph.AddVertex("M", 6);//12
+        graph.AddEdge("A", "B");
+        //graph.AddEdge(0, 1);
+        graph.AddEdge("A", "E");
+        //graph.AddEdge(0, 4);
         graph.AddEdge(0, 7);
         graph.AddEdge(0, 10);
         graph.AddEdge(1, 2);
@@ -109,5 +145,9 @@ public class Program{
         graph.DepthFirstSearch();
         Console.Write("\nBFS: ");
         graph.BreadthFirstSearch();
+
+        Vertex min = graph.FindMin();
+        Console.WriteLine("\nMin: {0} -> {1}", 
+                                min.label, min.data);
     }
 }
